@@ -28,6 +28,44 @@ author: wangzhengjiao
 
 
 
+## 外部动作双确认规则
+
+发布相关能力必须采用“双确认”：
+
+1. **发布预览确认**：用户确认平台、账号、标题、正文、图片、标签、公开权限、发布时间和风险边界无误。
+2. **外部动作授权确认**：用户单独明确授权要执行的动作。
+
+发布预览确认不等于外部动作授权。
+
+以下动作都属于外部动作，必须在发布预览确认之后再次单独询问，并获得明确授权后才能执行：
+
+- `upload`：上传图片、视频、附件到蚁小二或平台
+- `material`：登记到素材库
+- `save-draft`：保存蚁小二草稿
+- `publish` 且 `pubType=0`：创建平台草稿
+- `publish` 且 `pubType=1` 或同等配置：正式发布
+
+禁止事项：
+
+- 禁止在用户只确认发布预览时调用 `upload`、`material`、`save-draft`、`publish`
+- 禁止把“确认预览”“内容没问题”“可以”“按这个来”理解为上传或发布授权
+- 禁止为了准备发布而提前上传本地图片、视频或附件
+- 禁止默认创建平台草稿；平台草稿也属于外部推送，必须单独确认
+
+授权问法必须明确列出选项：
+
+```markdown
+发布预览已确认。请确认下一步外部动作：
+
+A. 暂不执行，只保留本地交付包
+B. 仅上传素材到蚁小二
+C. 保存为蚁小二草稿
+D. 创建平台草稿
+E. 立即发布
+
+请明确回复 A/B/C/D/E，或直接说明要执行的动作。确认前我不会上传、创建草稿或发布。
+```
+
 ## 平台支持 (Platform Support)
 
 API 调用时涉及的平台名称必须使用蚁小二定义的中文枚举或 Code。
@@ -80,7 +118,31 @@ API 调用时涉及的平台名称必须使用蚁小二定义的中文枚举或 
     - **Trigger**: “存为抖音草稿”、“推送到平台草稿箱”、“存为小红书草稿”。
     - **Action**: `publish` (并在 `accountForms` 内每项设置 `"contentPublishForm": { "pubType": 0 }`)
 
+### 草稿 Action 强制规则
+
+- 保存到蚁小二草稿箱：必须使用 `action: "save-draft"`。
+- 创建平台草稿：才允许使用 `action: "publish"`，并按平台要求设置 `pubType: 0` 或对应草稿参数。
+- 禁止使用 `action: "publish"` + `isDraft: true` 来代替 `save-draft`。
+- `isDraft: true` 只能视为字段标记，不得作为“不会推送到平台”的安全保证。
+- 只要目标是“蚁小二内部草稿”，就不能进入 `publish` 路径。
+
 ### ⚠️ 歧义处理：若用户仅提及“存草稿”而未明确指出是“蚁小二草稿”还是“平台草稿”，Agent **必须立刻询问用户**以明确意图，严禁自行默认或猜测。
+
+### 图文草稿标题与正文规则
+
+- `publishArgs.content` 必须填写图文通用正文，纯文本优先；不要只把正文放在 `contentPublishForm.description`。
+- `contentPublishForm.description` 用于平台侧正文 / 描述，可按平台文档使用 HTML 包装同一份正文。
+- `contentPublishForm.title` 用于平台侧标题，必须来自用户确认的发布预览或交付包。
+- 如果平台有标题长度限制，必须在保存草稿或发布前校验；抖音图文标题不得大于 20 个字符。
+- 标题超限时，必须先让用户确认缩短标题；不能自行截断后直接执行。
+- 正文可以做格式转换，但不得新增用户未确认的事实、诊断、承诺、建议或风险结论。
+
+### 图文草稿图片字段规则
+
+- 保存蚁小二图文草稿也必须遵守图文主 DTO：`publishArgs.content`、`accountForms[].images`、`accountForms[].cover`、`accountForms[].coverKey`、根级 `coverKey` 必须补齐。
+- 平台透传层 `contentPublishForm.images` 可以冗余填写，但不能替代 `accountForms[].images`。
+- 如果只把图片放在 `contentPublishForm.images`，可能出现草稿保存成功但蚁小二草稿列表没有图片。
+- 图文图片必须先通过 `upload` 获得 `key`，并写入 `images` 数组；不能直接填本地路径或外部 URL。
 
 ### 调用示例 (Example)
 

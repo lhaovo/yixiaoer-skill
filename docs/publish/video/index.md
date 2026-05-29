@@ -4,6 +4,8 @@
 > **阅读规范 (Reading Protocol)**:
 > 本文档是 **所有平台** 视频发布的 **唯一入口** 和 **基础 DTO 定义**。
 > 在查阅具体的平台文档（如 `douyin.md`）之前，你 **必须** 首先查阅本文档以理解 Payload 的根结构，否则将导致生成的 JSON 无法通过校验。
+>
+> **龙五使用约束：** 本文档描述的是接口执行方式，不代表可以直接执行。龙五必须先完成发布预览确认和外部动作授权确认；未获单独授权前，不得调用 `upload`、`save-draft` 或 `publish`。
 
 ## 触发场景 (Trigger)
 - **意图辨析**：当用户下达分发视频指令（无论是单平台发布还是多平台矩阵分发）时触发。涵盖从本地视频上传到最终推送的全链路。
@@ -40,14 +42,14 @@
 | `desc` | `string` | 否 | 任务描述/摘要 | - |
 | `publishChannel` | `string` | 否 | `cloud` (云端) 或 `local` (本机) | `cloud` |
 | `clientId` | `string` | 否 | 客户端连接 ID (`local` 发布时必填) | - |
-| `isDraft` | `boolean` | 否 | 是否仅保存为草稿 (蚁小二草稿) | `false` |
+| `isDraft` | `boolean` | 否 | 旧兼容字段；龙五不得用它保存蚁小二草稿。蚁小二草稿必须使用 `action: "save-draft"` | `false` |
 
 ### 1.2 草稿模式选取 (Draft Selection)
 
 | 场景 | 蚁小二草稿箱 | 目标平台草稿箱 |
 | :--- | :--- | :--- |
-| **位置** | `Payload` 根路径 | `accountForms` -> `contentPublishForm` |
-| **参数** | `"isDraft": true` | `"pubType": 0` (若平台不支持，见下方说明) |
+| **位置** | `save-draft` 动作负载 | `accountForms` -> `contentPublishForm` |
+| **参数** | `"action": "save-draft"` | `"pubType": 0` (若平台不支持，见下方说明) |
 | **效果** | 仅保存在蚁小二系统，不发起平台推送 | 执行推送流程，但最终结果为平台端的草稿态 |
 | **用户话术** | “存为蚁小二草稿”、“以后再发” | “存到抖音草稿箱”、“推送到小红书草稿” |
 

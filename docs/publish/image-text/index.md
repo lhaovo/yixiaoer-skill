@@ -4,6 +4,8 @@
 > **阅读规范 (Reading Protocol)**:
 > 本文档是 **所有平台** 图文发布的 **唯一入口** 和 **基础 DTO 定义**。
 > 在查阅具体的平台文档（如 `xiaohongshu.md`）之前，你 **必须** 首先查阅本文档以理解 Payload 的根结构，否则将导致生成的 JSON 无法通过校验。
+>
+> **龙五使用约束：** 本文档描述的是接口执行方式，不代表可以直接执行。龙五必须先完成发布预览确认和外部动作授权确认；未获单独授权前，不得调用 `upload`、`save-draft` 或 `publish`。
 
 ## 触发场景 (Trigger)
 - **意图辨析**：发布短小精悍的图文动态（类似小红书笔记、微博动态、朋友圈风格）时触发。特点是多图 + 简短描述。
@@ -20,6 +22,33 @@
 3. **平台细化**：针对小红书等平台，查阅对应文档补齐“话题”、“地点”等字段。
 4. **Payload 装配**：按照 1.1 - 1.3 节结构，构造包含 `action: "publish"` 的 JSON。
 5. **指令交付**：执行 `node scripts/api.ts --payload='{...}'`。
+
+## 图文草稿特别注意
+
+图文内容无论是正式发布、平台草稿，还是蚁小二草稿，都必须优先遵守本页的图文主 DTO：
+
+```text
+publishArgs.content
+publishArgs.accountForms[].images
+publishArgs.accountForms[].cover
+publishArgs.accountForms[].coverKey
+coverKey
+contentPublishForm.title
+contentPublishForm.description
+```
+
+标题与正文规则：
+
+- `publishArgs.content` 是图文通用正文，纯文本优先，用于通用 DTO 和草稿列表。
+- `contentPublishForm.description` 是平台侧正文 / 描述，可按平台文档使用 HTML。
+- 两处正文应来自同一份用户确认内容，不能一个新一个旧。
+- `contentPublishForm.title` 是平台侧标题，必须按目标平台限制预校验。
+- 抖音图文标题不得大于 20 个字符；超出时先让用户确认缩短版。
+- 正文格式可以转换，但不能新增未确认事实、结论、建议或风险承诺。
+
+平台详情页中的 `contentPublishForm.images` 只属于平台透传层，不能替代 `accountForms[].images`。如果只把图片放进 `contentPublishForm.images`，蚁小二草稿或图文任务可能出现“草稿有文字但没有图片”。
+
+保存蚁小二图文草稿时仍然使用 `action: "save-draft"`，但图片、封面和正文结构要和本页图文主 DTO 保持一致。
 
 ## 1. 数据结构 (Data Structure)
 
@@ -38,14 +67,14 @@
 | `desc` | `string` | 否 | 任务描述/摘要 | - |
 | `publishChannel` | `string` | 否 | `cloud` (云端) 或 `local` (本机) | `cloud` |
 | `clientId` | `string` | 否 | 客户端连接 ID (`local` 发布时必填) | - |
-| `isDraft` | `boolean` | 否 | 是否仅保存为草稿 (蚁小二草稿) | `false` |
+| `isDraft` | `boolean` | 否 | 旧兼容字段；龙五不得用它保存蚁小二草稿。蚁小二草稿必须使用 `action: "save-draft"` | `false` |
 
 ### 1.2 草稿模式选取 (Draft Selection)
 
 | 场景 | 蚁小二草稿箱 | 目标平台草稿箱 |
 | :--- | :--- | :--- |
-| **位置** | `Payload` 根路径 | `accountForms` -> `contentPublishForm` |
-| **参数** | `"isDraft": true` | `"pubType": 0` (若平台不支持，见下方说明) |
+| **位置** | `save-draft` 动作负载 | `accountForms` -> `contentPublishForm` |
+| **参数** | `"action": "save-draft"` | `"pubType": 0` (若平台不支持，见下方说明) |
 | **效果** | 仅保存在蚁小二系统，不发起平台推送 | 执行推送流程，但最终结果为平台端的草稿态 |
 | **用户话术** | “存为蚁小二草稿”、“暂不发布” | “存到抖音草稿箱”、“推送到小红书草稿盒” |
 

@@ -24,7 +24,7 @@
 | 字段名 | 类型 | 必填 | 说明 | 默认值 |
 | :--- | :--- | :--- | :--- | :--- |
 | `formType` | `string` | **是** | 固定值: `task` | `task` |
-| `title` | `string` | 否 | 标题 | - |
+| `title` | `string` | 否 | 标题；如果填写，发布前必须校验不大于 20 个字符 | - |
 | `description` | `string` | 否 | 图文描述，支持 HTML (`<p>`, `<topic>`)。最多 1000 字符。 | - |
 | `images` | `Array` | **是** | 图片数组 (`OldImage[]`) | - |
 | `location` | `Object` | 否 | 地址信息 (`PlatformDataItem`) | - |
