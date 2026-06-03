@@ -82,6 +82,7 @@ publishArgs.accountForms[].contentPublishForm
 - 根级 `coverKey`：通常也使用第一张图的 `key`。
 - `contentPublishForm`：平台透传层，可放 `formType`、`title`、`description`、`pubType` 以及平台特有字段。
 - 可以按平台文档在 `contentPublishForm.images` 中冗余放一份图片数组，但不能只放这一处。
+- 保存蚁小二图文草稿时，也必须补齐目标平台详情页定义的网页端默认字段，尤其是数组字段必须传空数组而不是省略。小红书图文必须传 `declaration: 0`、`createType: 0`、`shopping_cart: []`、`visibleType: 0`。缺少 `shopping_cart: []` 时，草稿可能保存成功，但网页编辑器会在团购商品组件读取 `shopping_cart.length` 时报 `Cannot read properties of undefined (reading 'length')`。
 
 标题和正文校验规则：
 
@@ -160,7 +161,11 @@ publishArgs.accountForms[].contentPublishForm
           "images": [
             { "key": "img_key_1", "width": 1080, "height": 1440, "size": 200000, "format": "png" },
             { "key": "img_key_2", "width": 1080, "height": 1440, "size": 200000, "format": "png" }
-          ]
+          ],
+          "visibleType": 0,
+          "declaration": 0,
+          "createType": 0,
+          "shopping_cart": []
         }
       }
     ]

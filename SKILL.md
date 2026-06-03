@@ -150,6 +150,8 @@ API 调用时涉及的平台名称必须使用蚁小二定义的中文枚举或 
 - 平台透传层 `contentPublishForm.images` 可以冗余填写，但不能替代 `accountForms[].images`。
 - 如果只把图片放在 `contentPublishForm.images`，可能出现草稿保存成功但蚁小二草稿列表没有图片。
 - 图文图片必须先通过 `upload` 获得 `key`，并写入 `images` 数组；不能直接填本地路径或外部 URL。
+- 上传图片、保存草稿、创建平台草稿或发布前，必须检查本地图片文件名是否符合 `{YYYYMMDD}_{内容关键词}_{序号或用途}.png`。如果仍是 `01-封面.png`、`cover.png`、`image.png` 等通用文件名，必须先提醒用户并处理命名后再继续，不得直接上传可能覆盖或误引用的图片。
+- 保存图文草稿时必须补齐平台详情页定义的网页端默认字段；数组字段不得省略，必须传空数组。小红书图文必须传 `shopping_cart: []`，否则网页端草稿编辑器可能读取 `shopping_cart.length` 报错。
 
 ### 调用示例 (Example)
 

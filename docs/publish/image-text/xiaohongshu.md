@@ -34,6 +34,14 @@
 | `scheduledTime` | `number` | 否 | 定时发布时间 (Unix 时间戳，秒) | - |
 | `collection` | `Object` | 否 | 合集信息，使用 `Collection` 结构 | - |
 | `visibleType` | `number` | **是** | 可见类型: 0-公开, 1-私密, 3-好友可见 | 0 |
+| `declaration` | `number` | **是** | 内容声明: 0-不声明。网页端默认字段，草稿也必须补齐。 | 0 |
+| `createType` | `number` | **是** | 创作类型。网页端默认字段，图文默认传 0。 | 0 |
+| `shopping_cart` | `Array` | **是** | 团购/商品挂载数组。即使不挂商品也必须传空数组 `[]`，否则网页端草稿编辑器会读取 `shopping_cart.length` 报错。 | `[]` |
+
+> [!CAUTION]
+> **蚁小二草稿兼容性**: 保存为 `action: "save-draft"` 时也必须补齐小红书网页端默认字段：
+> `declaration: 0`、`createType: 0`、`shopping_cart: []`、`visibleType: 0`。
+> 缺少 `shopping_cart: []` 的草稿可能保存成功，但打开网页编辑器时报 `Cannot read properties of undefined (reading 'length')`。
 
 ## 2. 复杂对象结构说明
 
@@ -70,7 +78,10 @@
           "images": [
             { "key": "img_xhs_01", "size": 1024, "width": 1080, "height": 1440, "format": "jpg" }
           ],
-          "visibleType": 0
+          "visibleType": 0,
+          "declaration": 0,
+          "createType": 0,
+          "shopping_cart": []
         }
       }
     ]
